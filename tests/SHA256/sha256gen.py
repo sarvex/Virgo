@@ -114,10 +114,7 @@ def print_add_tree(fh, ivals, voffset, maxlength=1):
 
         ivals = outs
 
-    if maxlength > 1:
-        return (ivals, voffset)
-    else:
-        return (ivals[0], voffset)
+    return (ivals, voffset) if maxlength > 1 else (ivals[0], voffset)
 
 # sum a bit vector into a single field element
 def do_addition(fh, ivals, voffset, noconsts):
@@ -597,7 +594,7 @@ def write_64_rounds(fh, finfh, randzero, noconsts):
 
     # make sure that the values for a-h match H0-H7
     # (we do this so that V only has to supply field elements corresponding to H0-H7)
-    for (val1, val2) in zip([a_field, b_field, c_field, e_field, f_field, g_field], H_i[0:3] + H_i[4:7]):
+    for (val1, val2) in zip([a_field, b_field, c_field, e_field, f_field, g_field], H_i[:3] + H_i[4:7]):
         (tmp, voffset) = test_field_field(fh, val1, val2, None, voffset)
         round_tests.append(tmp)
 
@@ -755,8 +752,7 @@ def write_4_rounds_rdl(fh, randzero):
     alloc = lambda voffset, extent=None: allocate_input(voffset, inVals, extent)
 
     # W_i_bits inputs for 1..63 (not 0, never needed)
-    W_i_bits = []
-    W_i_bits.append(None)
+    W_i_bits = [None]
     for i in range(1, 64):
         if i < 16:
             bitlength = 32
@@ -910,13 +906,9 @@ def write_4_rounds_rdl(fh, randzero):
                 outVals.extend(W_i_bits[i])
 
         # Ki+0 .. Ki+3
-        for i in range(rstart, rstart + 4):
-            outVals.append(K_i[i])
-
+        outVals.extend(K_i[i] for i in range(rstart, rstart + 4))
         # H0 .. H7
-        for i in range(0, 8):
-            outVals.append(H_i[i])
-
+        outVals.extend(H_i[i] for i in range(0, 8))
         # Hout0 .. Hout7
         for i in range(0, 8):
             outVals.append(Hout_i[i])
@@ -925,10 +917,7 @@ def write_4_rounds_rdl(fh, randzero):
         for i in range(0, 8):
             outVals.extend(Hout_i_bits[i])
 
-        # d_field and h_field
-        outVals.append(d_field[block])
-        outVals.append(h_field[block])
-
+        outVals.extend((d_field[block], h_field[block]))
         # a_bits, b_bits, c_bits, e_bits, f_bits, g_bits            (32 bits)
         if block == 0:
             for init in init_bits:
@@ -939,10 +928,7 @@ def write_4_rounds_rdl(fh, randzero):
             for init in (a_tmp, b_tmp, c_tmp, e_tmp, f_tmp, g_tmp):
                 outVals.extend(init[:32])
 
-        # d_out and h_out
-        outVals.append(d_field[block+1])
-        outVals.append(h_field[block+1])
-
+        outVals.extend((d_field[block+1], h_field[block+1]))
         # aout_bits, eout_bits
         for targ in (a_bits, e_bits):
             for val in targ[4*block:4*block+4]:

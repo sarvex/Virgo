@@ -60,10 +60,7 @@ def print_pws(ratio, fh):
         if len(ivals) % 2 != 0:
             outs.append(ivals[-1])
 
-        if len(outs) == 1:
-            return (outs[0], voffset)
-        else:
-            return print_add_tree(outs, voffset)
+        return (outs[0], voffset) if len(outs) == 1 else print_add_tree(outs, voffset)
 
     outs = []
     for xidx in range(0, 4 * ratio):
